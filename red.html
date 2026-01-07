@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Red JS Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            max-width: 100%;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 600px;
+            background: #8b8b8b;
+            border: 8px solid #444;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        #gameScreen {
+            background: #8bbc5e;
+        }
+        
+        .game-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .tile {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-size: cover;
+        }
+        
+        .player {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: #ff5555;
+            border: 2px solid #ff0000;
+            z-index: 100;
+            transition: all 0.1s;
+        }
+        
+        .npc {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: #5555ff;
+            border: 2px solid #0000ff;
+        }
+        
+        .grass {
+            background: #5a9c5a;
+        }
+        
+        .path {
+            background: #d4b57a;
+        }
+        
+        .building {
+            background: #c85a5a;
+        }
+        
+        .water {
+            background: #5a7dc8;
+        }
+        
+        .ui-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: #e8e8d0;
+            border-top: 4px solid #444;
+            padding: 10px;
+            color: #000;
+        }
+        
+        .dialog-box {
+            background: #e8e8d0;
+            border: 4px solid #444;
+            padding: 15px;
+            color: #000;
+            position: absolute;
+            bottom: 130px;
+            left: 20px;
+            right: 20px;
+            min-height: 80px;
+            display: none;
+        }
+        
+        .dialog-box.active {
+            display: block;
+        }
+        
+        .battle-screen {
+            background: linear-gradient(to bottom, #78c850, #98d8a0);
+        }
+        
+        .battle-ui {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 140px;
+            background: #e8e8d0;
+            border-top: 4px solid #444;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+        
+        .battle-option {
+            width: 45%;
+            height: 40px;
+            margin: 5px;
+            background: #f8f8f8;
+            border: 2px solid #444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .battle-option:hover {
+            background: #e0e0e0;
+        }
+        
+        .pokemon-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 100px;
+            background: rgba(255,255,255,0.8);
+            border: 4px solid #444;
+            padding: 10px;
+        }
+        
+        .pokemon-hp {
+            width: 100%;
+            height: 20px;
+            background: #ff5555;
+            border: 2px solid #000;
+            margin-top: 5px;
+        }
+        
+        .hp-fill {
+            height: 100%;
+            background: #55ff55;
+            width: 100%;
+        }
+        
+        .menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #e8e8d0;
+            border: 8px solid #444;
+            padding: 30px;
+            color: #000;
+            display: none;
+            width: 300px;
+        }
+        
+        .menu.active {
+            display: block;
+        }
+        
+        .menu-option {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f8f8;
+            border: 2px solid #444;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .menu-option:hover {
+            background: #e0e0e0;
+        }
+        
+        .text-log {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0,0,0,0.7);
+            border: 4px solid #444;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        
+        .inventory {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #e8e8d0;
+            border: 8px solid #444;
+            padding: 20px;
+            width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #000;
+        }
+        
+        .inventory.active {
+            display: block;
+        }
+        
+        .item {
+            padding: 8px;
+            margin: 4px;
+            background: #f0f0f0;
+            border: 2px solid #888;
+            cursor: pointer;
+        }
+        
+        .item:hover {
+            background: #e0e0e0;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+        }
+        
+        .control-btn {
+            background: #444;
+            color: white;
+            border: 2px solid #666;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .control-btn:active {
+            background: #666;
+        }
+        
+        #btnUp { grid-column: 2; grid-row: 1; }
+        #btnLeft { grid-column: 1; grid-row: 2; }
+        #btnRight { grid-column: 3; grid-row: 2; }
+        #btnDown { grid-column: 2; grid-row: 3; }
+        #btnA { grid-column: 4; grid-row: 2; background: #ff4444; }
+        #btnB { grid-column: 4; grid-row: 3; background: #4444ff; }
+        
+        @media (max-width: 600px) {
+            .controls {
+                display: grid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                <h1 style="color: #ff5555; font-size: 48px; margin-bottom: 40px;">POKéMON RED</h1>
+                <div id="startMenu" class="menu active">
+                    <div class="menu-option" onclick="startNewGame()">NEW GAME</div>
+                    <div class="menu-option" onclick="continueGame()">CONTINUE</div>
+                    <div class="menu-option" onclick="showOptions()">OPTIONS</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-grid" id="gameWorld"></div>
+            <div class="player" id="player"></div>
+            <div class="dialog-box" id="dialogBox"></div>
+            <div class="ui-panel">
+                <div>MAP: <span id="locationName">PALLET TOWN</span></div>
+                <div>POKéDEX: <span id="pokedexCount">3</span> SEEN</div>
+                <div>TIME: <span id="gameTime">0:00</span></div>
+                <div style="margin-top: 10px;">
+                    <button onclick="openMenu()" style="padding: 5px 10px; margin-right: 10px;">MENU</button>
+                    <button onclick="openInventory()" style="padding: 5px 10px;">BAG</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Battle Screen -->
+        <div id="battleScreen" class="screen">
+            <div class="battle-screen">
+                <div class="pokemon-display" id="playerPokemonDisplay">
+                    <div>CHARIZARD Lv. 36</div>
+                    <div class="pokemon-hp">
+                        <div class="hp-fill" id="playerHP" style="width: 75%"></div>
+                    </div>
+                </div>
+                <div class="text-log" id="battleLog"></div>
+                <div class="battle-ui">
+                    <div class="battle-option" onclick="battleAction('fight')">FIGHT</div>
+                    <div class="battle-option" onclick="battleAction('pokemon')">POKéMON</div>
+                    <div class="battle-option" onclick="battleAction('bag')">BAG</div>
+                    <div class="battle-option" onclick="battleAction('run')">RUN</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu -->
+        <div id="gameMenu" class="menu">
+            <h2 style="text-align: center; margin-bottom: 20px;">MENU</h2>
+            <div class="menu-option" onclick="openPokedex()">POKéDEX</div>
+            <div class="menu-option" onclick="openPokemon()">POKéMON</div>
+            <div class="menu-option" onclick="openInventory()">ITEM</div>
+            <div class="menu-option" onclick="saveGame()">SAVE</div>
+            <div class="menu-option" onclick="loadGame()">LOAD</div>
+            <div class="menu-option" onclick="closeMenu()">CLOSE</div>
+            <div class="menu-option" onclick="returnToTitle()">TITLE</div>
+        </div>
+        
+        <!-- Inventory -->
+        <div id="inventory" class="inventory">
+            <h2 style="text-align: center; margin-bottom: 20px;">ITEM BAG</h2>
+            <div id="inventoryItems"></div>
+            <button onclick="closeInventory()" style="margin-top: 20px; padding: 10px; width: 100%;">CLOSE</button>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <button class="control-btn" id="btnUp">↑</button>
+            <button class="control-btn" id="btnLeft">←</button>
+            <button class="control-btn" id="btnRight">→</button>
+            <button class="control-btn" id="btnDown">↓</button>
+            <button class="control-btn" id="btnA">A</button>
+            <button class="control-btn" id="btnB">B</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentScreen: 'start',
+            player: {
+                x: 10,
+                y: 10,
+                facing: 'down',
+                map: 'pallet_town',
+                pokemon: [
+                    { name: 'CHARIZARD', level: 36, hp: 120, maxHp: 120, type: 'FIRE' }
+                ],
+                items: [
+                    { name: 'POTION', quantity: 3 },
+                    { name: 'POKé BALL', quantity: 5 },
+                    { name: 'REPEL', quantity: 2 }
+                ],
+                badges: 0,
+                pokedex: 3,
+                money: 3560
+            },
+            currentBattle: null,
+            gameTime: 0,
+            maps: {},
+            npcs: []
+        };
+
+        // Game Data
+        const POKEMON = {
+            'CHARIZARD': { type: 'FIRE', moves: ['FLAMETHROWER', 'SLASH'] },
+            'BLASTOISE': { type: 'WATER', moves: ['HYDRO PUMP', 'BITE'] },
+            'VENUSAUR': { type: 'GRASS', moves: ['SOLARBEAM', 'RAZOR LEAF'] },
+            'PIDGEY': { type: 'NORMAL', moves: ['GUST', 'QUICK ATTACK'] },
+            'RATTATA': { type: 'NORMAL', moves: ['TACKLE', 'QUICK ATTACK'] }
+        };
+
+        const MOVES = {
+            'FLAMETHROWER': { power: 90, type: 'FIRE' },
+            'SLASH': { power: 70, type: 'NORMAL' },
+            'HYDRO PUMP': { power: 110, type: 'WATER' },
+            'BITE': { power: 60, type: 'NORMAL' },
+            'SOLARBEAM': { power: 120, type: 'GRASS' },
+            'RAZOR LEAF': { power: 55, type: 'GRASS' },
+            'GUST': { power: 40, type: 'FLYING' },
+            'QUICK ATTACK': { power: 40, type: 'NORMAL' },
+            'TACKLE': { power: 35, type: 'NORMAL' }
+        };
+
+        // Initialize Game
+        function initGame() {
+            generateMaps();
+            setupControls();
+            updatePlayerPosition();
+            startGameClock();
+            
+            // Add sample NPCs
+            gameState.npcs = [
+                { id: 'oak', x: 10, y: 8, dialog: "Hello there! Welcome to the world of POKéMON!" },
+                { id: 'rival', x: 12, y: 12, dialog: "I'm going to be the best POKéMON trainer!" }
+            ];
+        }
+
+        function generateMaps() {
+            // Pallet Town
+            gameState.maps.pallet_town = {
+                width: 20,
+                height: 15,
+                tiles: [],
+                name: "PALLET TOWN"
+            };
+
+            // Generate tiles
+            for (let y = 0; y < 15; y++) {
+                for (let x = 0; x < 20; x++) {
+                    if (x > 7 && x < 12 && y > 5 && y < 10) {
+                        gameState.maps.pallet_town.tiles.push({ x, y, type: 'building' });
+                    } else if (x > 3 && x < 17 && y > 10) {
+                        gameState.maps.pallet_town.tiles.push({ x, y, type: 'grass' });
+                    } else {
+                        gameState.maps.pallet_town.tiles.push({ x, y, type: 'path' });
+                    }
+                }
+            }
+
+            // Route 1
+            gameState.maps.route_1 = {
+                width: 25,
+                height: 20,
+                tiles: [],
+                name: "ROUTE 1"
+            };
+
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 25; x++) {
+                    if (x > 10 && x < 15) {
+                        gameState.maps.route_1.tiles.push({ x, y, type: 'path' });
+                    } else if (y < 15) {
+                        gameState.maps.route_1.tiles.push({ x, y, type: 'grass' });
+                    } else {
+                        gameState.maps.route_1.tiles.push({ x, y, type: 'water' });
+                    }
+                }
+            }
+        }
+
+        function setupControls() {
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp': movePlayer(0, -1); break;
+                    case 'ArrowDown': movePlayer(0, 1); break;
+                    case 'ArrowLeft': movePlayer(-1, 0); break;
+                    case 'ArrowRight': movePlayer(1, 0); break;
+                    case 'Enter': actionButton(); break;
+                    case 'Escape': openMenu(); break;
+                }
+            });
+
+            // Button controls
+            document.getElementById('btnUp').addEventListener('click', () => movePlayer(0, -1));
+            document.getElementById('btnDown').addEventListener('click', () => movePlayer(0, 1));
+            document.getElementById('btnLeft').addEventListener('click', () => movePlayer(-1, 0));
+            document.getElementById('btnRight').addEventListener('click', () => movePlayer(1, 0));
+            document.getElementById('btnA').addEventListener('click', actionButton);
+            document.getElementById('btnB').addEventListener('click', closeDialog);
+        }
+
+        function movePlayer(dx, dy) {
+            if (gameState.currentScreen !== 'game') return;
+            
+            const newX = gameState.player.x + dx;
+            const newY = gameState.player.y + dy;
+            const map = gameState.maps[gameState.player.map];
+            
+            // Check bounds
+            if (newX >= 0 && newX < map.width && newY >= 0 && newY < map.height) {
+                // Check collision with buildings
+                const tile = map.tiles.find(t => t.x === newX && t.y === newY);
+                if (tile && tile.type === 'building') {
+                    showDialog("The door is locked.");
+                    return;
+                }
+                
+                gameState.player.x = newX;
+                gameState.player.y = newY;
+                
+                // Update facing direction
+                if (dx > 0) gameState.player.facing = 'right';
+                if (dx < 0) gameState.player.facing = 'left';
+                if (dy > 0) gameState.player.facing = 'down';
+                if (dy < 0) gameState.player.facing = 'up';
+                
+                updatePlayerPosition();
+                checkForEvents();
+                
+                // Random encounter in grass
+                if (tile && tile.type === 'grass' && Math.random() < 0.1) {
+                    startWildBattle();
+                }
+            }
+        }
+
+        function updatePlayerPosition() {
+            const player = document.getElementById('player');
+            const map = gameState.maps[gameState.player.map];
+            
+            // Clear previous map
+            const world = document.getElementById('gameWorld');
+            world.innerHTML = '';
+            
+            // Draw tiles
+            map.tiles.forEach(tile => {
+                const tileEl = document.createElement('div');
+                tileEl.className = `tile ${tile.type}`;
+                tileEl.style.left = `${tile.x * 32}px`;
+                tileEl.style.top = `${tile.y * 32}px`;
+                world.appendChild(tileEl);
+            });
+            
+            // Draw NPCs
+            gameState.npcs.forEach(npc => {
+                const npcEl = document.createElement('div');
+                npcEl.className = 'npc';
+                npcEl.style.left = `${npc.x * 32}px`;
+                npcEl.style.top = `${npc.y * 32}px`;
+                world.appendChild(npcEl);
+            });
+            
+            // Update player position
+            player.style.left = `${gameState.player.x * 32}px`;
+            player.style.top = `${gameState.player.y * 32}px`;
+            
+            // Update location name
+            document.getElementById('locationName').textContent = map.name;
+        }
+
+        function checkForEvents() {
+            const player = gameState.player;
+            
+            // Check for NPC interactions
+            gameState.npcs.forEach(npc => {
+                if (Math.abs(player.x - npc.x) <= 1 && Math.abs(player.y - npc.y) <= 1) {
+                    showDialog(npc.dialog);
+                }
+            });
+            
+            // Map transitions
+            if (gameState.player.map === 'pallet_town' && player.y >= 14) {
+                gameState.player.map = 'route_1';
+                gameState.player.y = 0;
+                gameState.player.x = 12;
+                updatePlayerPosition();
+            } else if (gameState.player.map === 'route_1' && player.y <= 0) {
+                gameState.player.map = 'pallet_town';
+                gameState.player.y = 13;
+                gameState.player.x = 12;
+                updatePlayerPosition();
+            }
+        }
+
+        function actionButton() {
+            if (gameState.currentScreen === 'game') {
+                const player = gameState.player;
+                let checkX = player.x;
+                let checkY = player.y;
+                
+                // Check based on facing direction
+                switch(player.facing) {
+                    case 'up': checkY--; break;
+                    case 'down': checkY++; break;
+                    case 'left': checkX--; break;
+                    case 'right': checkX++; break;
+                }
+                
+                // Check for NPC in front
+                const npc = gameState.npcs.find(n => n.x === checkX && n.y === checkY);
+                if (npc) {
+                    showDialog(npc.dialog);
+                } else {
+                    showDialog("There's nothing there...");
+                }
+            }
+        }
+
+        function showDialog(text) {
+            const dialog = document.getElementById('dialogBox');
+            dialog.textContent = text;
+            dialog.classList.add('active');
+        }
+
+        function closeDialog() {
+            document.getElementById('dialogBox').classList.remove('active');
+        }
+
+        function startNewGame() {
+            gameState.currentScreen = 'game';
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('gameMenu').classList.remove('active');
+            
+            // Reset player position
+            gameState.player.x = 10;
+            gameState.player.y = 10;
+            gameState.player.map = 'pallet_town';
+            
+            showDialog("Welcome to the world of POKéMON! Your adventure begins in PALLET TOWN.");
+            updatePlayerPosition();
+        }
+
+        function continueGame() {
+            const saved = localStorage.getItem('pokemonRedSave');
+            if (saved) {
+                const saveData = JSON.parse(saved);
+                Object.assign(gameState, saveData);
+                gameState.currentScreen = 'game';
+                switchScreen('game');
+                updatePlayerPosition();
+                showDialog("Game loaded successfully!");
+            } else {
+                showDialog("No saved game found!");
+            }
+        }
+
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName + 'Screen').classList.add('active');
+            gameState.currentScreen = screenName;
+        }
+
+        function openMenu() {
+            document.getElementById('gameMenu').classList.add('active');
+        }
+
+        function closeMenu() {
+            document.getElementById('gameMenu').classList.remove('active');
+        }
+
+        function openInventory() {
+            const inventory = document.getElementById('inventory');
+            const itemsDiv = document.getElementById('inventoryItems');
+            itemsDiv.innerHTML = '';
+            
+            gameState.player.items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'item';
+                itemEl.textContent = `${item.name} x${item.quantity}`;
+                itemEl.onclick = () => useItem(item.name);
+                itemsDiv.appendChild(itemEl);
+            });
+            
+            inventory.classList.add('active');
+            closeMenu();
+        }
+
+        function closeInventory() {
+            document.getElementById('inventory').classList.remove('active');
+        }
+
+        function useItem(itemName) {
+            const item = gameState.player.items.find(i => i.name === itemName);
+            if (item) {
+                item.quantity--;
+                if (item.quantity <= 0) {
+                    gameState.player.items = gameState.player.items.filter(i => i.name !== itemName);
+                }
+                showDialog(`Used ${itemName}!`);
+                closeInventory();
+            }
+        }
+
+        function startWildBattle() {
+            const wildPokemon = ['PIDGEY', 'RATTATA'][Math.floor(Math.random() * 2)];
+            gameState.currentBattle = {
+                wildPokemon: {
+                    name: wildPokemon,
+                    level: Math.floor(Math.random() * 5) + 3,
+                    hp: 50,
+                    maxHp: 50
+                },
+                playerPokemon: gameState.player.pokemon[0],
+                turn: 'player'
+            };
+            
+            switchScreen('battle');
+            addBattleLog(`A wild ${wildPokemon} appeared!`);
+        }
+
+        function battleAction(action) {
+            switch(action) {
+                case 'fight':
+                    showMoveSelection();
+                    break;
+                case 'run':
+                    if (Math.random() > 0.2) {
+                        addBattleLog("Got away safely!");
+                        setTimeout(() => switchScreen('game'), 1000);
+                    } else {
+                        addBattleLog("Can't escape!");
+                        enemyTurn();
+                    }
+                    break;
+                case 'bag':
+                    openInventory();
+                    break;
+                case 'pokemon':
+                    addBattleLog("No other POKéMON!");
+                    break;
+            }
+        }
+
+        function showMoveSelection() {
+            const moves = POKEMON[gameState.currentBattle.playerPokemon.name].moves;
+            const battleLog = document.getElementById('battleLog');
+            battleLog.innerHTML = '';
+            
+            moves.forEach(move => {
+                const moveEl = document.createElement('div');
+                moveEl.textContent = move;
+                moveEl.style.padding = '5px';
+                moveEl.style.margin = '2px';
+                moveEl.style.background = '#fff';
+                moveEl.style.cursor = 'pointer';
+                moveEl.onclick = () => useMove(move);
+                battleLog.appendChild(moveEl);
+            });
+        }
+
+        function useMove(moveName) {
+            const battle = gameState.currentBattle;
+            const move = MOVES[moveName];
+            const damage = Math.floor(move.power * (Math.random() * 0.3 + 0.85));
+            
+            battle.wildPokemon.hp -= damage;
+            if (battle.wildPokemon.hp < 0) battle.wildPokemon.hp = 0;
+            
+            addBattleLog(`${battle.playerPokemon.name} used ${moveName}!`);
+            addBattleLog(`It hit for ${damage} damage!`);
+            
+            if (battle.wildPokemon.hp <= 0) {
+                addBattleLog(`Wild ${battle.wildPokemon.name} fainted!`);
+                setTimeout(() => {
+                    addBattleLog("You won the battle!");
+                    switchScreen('game');
+                }, 1500);
+            } else {
+                setTimeout(enemyTurn, 1000);
+            }
+            
+            updateBattleUI();
+        }
+
+        function enemyTurn() {
+            const battle = gameState.currentBattle;
+            const moves = POKEMON[battle.wildPokemon.name].moves;
+            const move = moves[Math.floor(Math.random() * moves.length)];
+            const damage = Math.floor(30 * (Math.random() * 0.3 + 0.85));
+            
+            battle.playerPokemon.hp -= damage;
+            if (battle.playerPokemon.hp < 0) battle.playerPokemon.hp = 0;
+            
+            addBattleLog(`Wild ${battle.wildPokemon.name} used ${move}!`);
+            addBattleLog(`It hit for ${damage} damage!`);
+            
+            if (battle.playerPokemon.hp <= 0) {
+                addBattleLog(`${battle.playerPokemon.name} fainted!`);
+                setTimeout(() => {
+                    addBattleLog("You blacked out!");
+                    switchScreen('game');
+                    // Reset player position to Pallet Town
+                    gameState.player.map = 'pallet_town';
+                    gameState.player.x = 10;
+                    gameState.player.y = 10;
+                    gameState.player.pokemon[0].hp = gameState.player.pokemon[0].maxHp;
+                    updatePlayerPosition();
+                }, 1500);
+            }
+            
+            updateBattleUI();
+        }
+
+        function addBattleLog(text) {
+            const log = document.getElementById('battleLog');
+            const entry = document.createElement('div');
+            entry.textContent = text;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateBattleUI() {
+            const battle = gameState.currentBattle;
+            if (battle) {
+                document.getElementById('playerHP').style.width = 
+                    `${(battle.playerPokemon.hp / battle.playerPokemon.maxHp) * 100}%`;
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('pokemonRedSave', JSON.stringify(gameState));
+            showDialog("Game saved successfully!");
+            closeMenu();
+        }
+
+        function loadGame() {
+            continueGame();
+        }
+
+        function returnToTitle() {
+            switchScreen('start');
+            closeMenu();
+        }
+
+        function startGameClock() {
+            setInterval(() => {
+                gameState.gameTime++;
+                const minutes = Math.floor(gameState.gameTime / 60);
+                const seconds = gameState.gameTime % 60;
+                document.getElementById('gameTime').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Initialize game when page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
